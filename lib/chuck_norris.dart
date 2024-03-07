@@ -177,16 +177,23 @@ Future<FilteredQuoteList> getFilteredQuoteByInput() async {
 
   final Map<String, dynamic> data = json.decode(response.body);
   final list = data['result'] as List;
+  dynamic category = "";
+
+  if(data['categories'] != []){
+    category = "random";
+  }else{
+    category = data['categories'][0];
+  }
 
   List<Quote> quoteList = [];
   for (var i = 0; i < list.length; i++) {
     Quote quote = Quote(
         quote: list[i]['value'],
         id: list[i]['id'],
-        dateOfCreation: list[i]['created_at']);
+        dateOfCreation: list[i]['created_at'],
+        category: category);
 
     quoteList.add(quote);
-    //print(quoteList);
   }
 
   FilteredQuoteList res =

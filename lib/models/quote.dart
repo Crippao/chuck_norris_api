@@ -8,7 +8,7 @@ class Quote {
 
   @override
   String toString() {
-    String data = "This is your quote: $quote \n Its id is: $id, its category is $category and it was created in: $dateOfCreation\n";
+    String data = "\nThis is your quote: '$quote' Its id is: '$id', its category is '$category' and it was created in: '$dateOfCreation'";
     return data;
   }
 }
