@@ -1,8 +1,6 @@
 import "dart:async";
-import "dart:ffi";
 import "dart:io";
 import "package:chuck_norris/models/filtered_quote_list.dart";
-
 import "models/quote.dart";
 import "dart:convert";
 import "package:http/http.dart" as http;
@@ -106,6 +104,22 @@ Future<Quote> getQuote() async {
       dateOfCreation: data['created_at'],
       category: "random");
   return res;
+}
+
+Future<String> getAndSaveQuote() async {
+  const url = "https://api.chucknorris.io/jokes/random";
+  final urlParse = Uri.parse(url);
+  final response = await http.get(urlParse);
+
+  final Map<String, dynamic> data = json.decode(response.body);
+  final String dataToString = jsonEncode(data);
+
+  final filename = 'C:/projects/flutter/l1/chuck_norris/lib/storage/quotes.txt';
+  final newQuote = "$dataToString, \n";
+
+  File(filename).writeAsStringSync(newQuote, mode: FileMode.append);
+
+  return "Salvata una nuova citazione"; 
 }
 
 Future<Quote> getCategoryQuoteByEnv() async {
