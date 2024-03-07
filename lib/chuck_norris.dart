@@ -1,7 +1,9 @@
 import "dart:async";
 import "dart:ffi";
 import "dart:io";
-import "models/quote.dart"; 
+import "package:chuck_norris/models/filtered_quote_list.dart";
+
+import "models/quote.dart";
 import "dart:convert";
 import "package:http/http.dart" as http;
 import 'package:dotenv/dotenv.dart';
@@ -23,9 +25,17 @@ String? chooseCategoryByInput() {
   stdout.writeln("14 - science");
   stdout.writeln("15 - sport");
   stdout.writeln("16 - travel");
-  stdout.writeln('Di che categoria sarà la tua citazione? Inserisci un numero da 1 a 16');
+  stdout.writeln(
+      'Di che categoria sarà la tua citazione? Inserisci un numero da 1 a 16');
   final input = stdin.readLineSync(encoding: utf8);
-  stdout.writeln('You typed: $input'); //, the choosen category is $category[$input]');
+  stdout.writeln('You typed: $input');
+  return input;
+}
+
+String? chooseFilterByInput() {
+  stdout.writeln('Digita la parola per la quale filtrare le citazioni: ');
+  final input = stdin.readLineSync(encoding: utf8);
+  stdout.writeln('You typed: $input');
   return input;
 }
 
@@ -35,11 +45,11 @@ Future<String?> convertInputToCategory() async {
   final urlCategory = "https://api.chucknorris.io/jokes/categories";
 
   final urlParse = Uri.parse(urlCategory);
-  final response = await http.get(urlParse); 
+  final response = await http.get(urlParse);
 
   final data = json.decode(response.body);
   //stdout.writeln(data);
-  
+
   final String category;
   switch (input) {
     case "1":
@@ -85,47 +95,88 @@ Future<Quote> getQuote() async {
   const url = "https://api.chucknorris.io/jokes/random";
   final urlParse = Uri.parse(url);
   //stdout.writeln(urlParse);
-  final response = await http.get(urlParse); 
+  final response = await http.get(urlParse);
   //stdout.writeln(response);
 
-  final Map<String, dynamic> data = json.decode(response.body); 
-  
-  Quote res = Quote(quote:data['value'],id:data['id'],dateOfCreation:data['created_at'], category:"random");
+  final Map<String, dynamic> data = json.decode(response.body);
+
+  Quote res = Quote(
+      quote: data['value'],
+      id: data['id'],
+      dateOfCreation: data['created_at'],
+      category: "random");
   return res;
 }
 
-Future<Quote> getCategoryQuoteByEnv () async {
+Future<Quote> getCategoryQuoteByEnv() async {
   dynamic res;
   var env = DotEnv(includePlatformEnvironment: true)..load();
-  if(env.isEveryDefined(['categories'])){
+  if (env.isEveryDefined(['categories'])) {
     final category = env['categories'];
-    
-    //stdout.writeln(category);   
 
-    final urlCategory = "https://api.chucknorris.io/jokes/random?category=$category";
+    //stdout.writeln(category);
+
+    final urlCategory =
+        "https://api.chucknorris.io/jokes/random?category=$category";
 
     final urlParse = Uri.parse(urlCategory);
-    final response = await http.get(urlParse); 
+    final response = await http.get(urlParse);
 
-    final Map<String, dynamic> data = json.decode(response.body); 
+    final Map<String, dynamic> data = json.decode(response.body);
     //stdout.writeln(data);
-  
-    res = Quote(quote:data['value'],id:data['id'],dateOfCreation:data['created_at'], category:category);
+
+    res = Quote(
+        quote: data['value'],
+        id: data['id'],
+        dateOfCreation: data['created_at'],
+        category: category);
   }
-  return res;  
+  return res;
 }
 
-Future<Quote> getCategoryQuoteByInput () async {
+Future<Quote> getCategoryQuoteByInput() async {
   final input = await convertInputToCategory();
   final category = input.toString();
 
-  final urlCategory = "https://api.chucknorris.io/jokes/random?category=$category";
+  final urlCategory =
+      "https://api.chucknorris.io/jokes/random?category=$category";
   final urlParse = Uri.parse(urlCategory);
-  final response = await http.get(urlParse); 
+  final response = await http.get(urlParse);
 
-  final Map<String, dynamic> data = json.decode(response.body); 
+  final Map<String, dynamic> data = json.decode(response.body);
 
-  Quote res = Quote(quote:data['value'],id:data['id'],dateOfCreation:data['created_at'], category:category.toString());
-  
-  return res;  
+  Quote res = Quote(
+      quote: data['value'],
+      id: data['id'],
+      dateOfCreation: data['created_at'],
+      category: category.toString());
+
+  return res;
+}
+
+Future<FilteredQuoteList> getFilteredQuoteByInput() async {
+  final input = chooseFilterByInput();
+
+  final urlFilter = "https://api.chucknorris.io/jokes/search?query=$input";
+  final urlParse = Uri.parse(urlFilter);
+  final response = await http.get(urlParse);
+
+  final Map<String, dynamic> data = json.decode(response.body);
+  final list = data['result'] as List;
+
+  List<Quote> quoteList = [];
+  for (var i = 0; i < list.length; i++) {
+    Quote quote = Quote(
+        quote: list[i]['value'],
+        id: list[i]['id'],
+        dateOfCreation: list[i]['created_at']);
+
+    quoteList.add(quote);
+    //print(quoteList);
+  }
+
+  FilteredQuoteList res =
+      FilteredQuoteList(total: data['total'], results: quoteList);
+
+  return res;
 }
